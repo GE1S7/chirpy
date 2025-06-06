@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"sync/atomic"
@@ -15,28 +16,57 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 	return next
 }
 
-func handler(w http.ResponseWriter, req *http.Request) {
+func healthHandler(w http.ResponseWriter, req *http.Request) {
 
 	header := w.Header()
 	header.Set("Content-Type", "text/plain; charset=utf-8")
 
-	w.WriteHeader(http.StatusOK)
 	msg := []byte("OK")
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(msg)
+}
+
+func (cfg *apiConfig) reqNumHandler(w http.ResponseWriter, req *http.Request) {
+
+	header := w.Header()
+	header.Set("Content-Type", "text/plain; charset=utf-8")
+
+	msg := []byte(fmt.Sprintf("Hits: %v", cfg.fileserverHits.Load()))
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(msg)
+
+}
+
+func (cfg *apiConfig) resetHandler(w http.ResponseWriter, req *http.Request) {
+
+	header := w.Header()
+	header.Set("Content-Type", "text/plain; charset=utf-8")
+
+	cfg.fileserverHits.Store(0)
+
+	msg := []byte(fmt.Sprintf("fileserverHits has been reset to 0"))
+
+	w.WriteHeader(http.StatusOK)
 	w.Write(msg)
 }
 
 func main() {
+	cfg := apiConfig{}
 	mux := http.NewServeMux()
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: mux,
 	}
 
-	mux.HandleFunc("/healthz", handler)
+	mux.HandleFunc("/healthz", healthHandler)
+	mux.HandleFunc("/metrics", cfg.reqNumHandler)
+	mux.HandleFunc("/reset", cfg.resetHandler)
 
-	fsHandler := http.StripPrefix("/app/", http.FileServer(http.Dir(".")))
+	fsh := http.StripPrefix("/app/", http.FileServer(http.Dir(".")))
 
-	mux.Handle("/app/", fsHandler)
+	mux.Handle("/app/", cfg.middlewareMetricsInc(fsh))
 
 	log.Fatal(server.ListenAndServe())
 
