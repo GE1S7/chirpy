@@ -61,12 +61,12 @@ func main() {
 		Handler: mux,
 	}
 
-	fsh := http.StripPrefix("/app/", http.FileServer(http.Dir(".")))
-	mux.Handle("/app/", cfg.middlewareMetricsInc(fsh))
+	fsh := http.StripPrefix("/app", http.FileServer(http.Dir(".")))
+	mux.Handle("/app", cfg.middlewareMetricsInc(fsh))
 
-	mux.HandleFunc("/healthz/", healthHandler)
-	mux.HandleFunc("/metrics/", cfg.reqNumHandler)
-	mux.HandleFunc("/reset/", cfg.resetHandler)
+	mux.HandleFunc("GET /healthz", healthHandler)
+	mux.HandleFunc("GET /metrics", cfg.reqNumHandler)
+	mux.HandleFunc("POST /reset", cfg.resetHandler)
 
 	log.Fatal(server.ListenAndServe())
 
