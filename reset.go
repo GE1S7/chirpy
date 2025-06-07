@@ -23,7 +23,7 @@ func (cfg *apiConfig) resetHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(msg)
 
 	} else {
-		respondWithError(w, 403, "Forbidden")
+		w.WriteHeader(403)
 	}
 
 }

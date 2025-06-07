@@ -29,7 +29,7 @@ func main() {
 	cfg := apiConfig{
 		fileserverHits: atomic.Int32{},
 		dbQueries:      database.New(db),
-		platform: os.Getenv("PLATFORM")
+		platform:       os.Getenv("PLATFORM"),
 	}
 
 	mux := http.NewServeMux()
