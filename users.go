@@ -15,7 +15,7 @@ type User struct {
 	Email     string    `json:"email"`
 }
 
-func createUserHandler(w http.ResponseWriter, r *http.Request, cfg *apiConfig) func(w http.ResponseWriter, r *http.Request) {
+func createUserHandler(cfg *apiConfig) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		type Params struct {
