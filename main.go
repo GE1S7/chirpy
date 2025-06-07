@@ -1,55 +1,15 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"sync/atomic"
+
+	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
-}
-
-func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cfg.fileserverHits.Add(1)
-		fmt.Println("add 1")
-		next.ServeHTTP(w, r)
-	})
-
-}
-
-func healthHandler(w http.ResponseWriter, req *http.Request) {
-
-	header := w.Header()
-	header.Set("Content-Type", "text/plain; charset=utf-8")
-
-	w.WriteHeader(http.StatusOK)
-	msg := []byte("OK")
-	w.Write(msg)
-}
-
-func (cfg *apiConfig) reqNumHandler(w http.ResponseWriter, req *http.Request) {
-	header := w.Header()
-	header.Set("Content-Type", "text/plain; charset=utf-8")
-
-	w.WriteHeader(http.StatusOK)
-	msg := []byte(fmt.Sprintf("Hits: %v", cfg.fileserverHits.Load()))
-	w.Write(msg)
-
-}
-
-func (cfg *apiConfig) resetHandler(w http.ResponseWriter, req *http.Request) {
-
-	header := w.Header()
-	header.Set("Content-Type", "text/plain; charset=utf-8")
-
-	cfg.fileserverHits.Swap(0)
-
-	w.WriteHeader(http.StatusOK)
-	msg := []byte(fmt.Sprintf("fileserverHits has been reset to 0"))
-	w.Write(msg)
 }
 
 func main() {
@@ -62,11 +22,13 @@ func main() {
 	}
 
 	fsh := http.StripPrefix("/app", http.FileServer(http.Dir(".")))
-	mux.Handle("/app", cfg.middlewareMetricsInc(fsh))
+	mux.Handle("/app/", cfg.middlewareMetricsInc(fsh))
 
-	mux.HandleFunc("GET /healthz", healthHandler)
-	mux.HandleFunc("GET /metrics", cfg.reqNumHandler)
-	mux.HandleFunc("POST /reset", cfg.resetHandler)
+	mux.HandleFunc("GET /api/healthz", healthHandler)
+	mux.HandleFunc("GET /admin/metrics", cfg.reqNumHandler)
+
+	mux.HandleFunc("POST /admin/reset", cfg.resetHandler)
+	mux.HandleFunc("POST /api/validate_chirp", validateHandler)
 
 	log.Fatal(server.ListenAndServe())
 
