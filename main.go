@@ -1,19 +1,34 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
+	"os"
 	"sync/atomic"
 
+	"github.com/GE1S7/m/v2/internal/database"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
+	dbQueries      *database.Queries
 }
 
 func main() {
-	cfg := apiConfig{}
+	godotenv.Load()
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cfg := apiConfig{
+		fileserverHits: atomic.Int32{},
+		dbQueries:      database.New(db),
+	}
 
 	mux := http.NewServeMux()
 	server := &http.Server{
@@ -24,11 +39,12 @@ func main() {
 	fsh := http.StripPrefix("/app", http.FileServer(http.Dir(".")))
 	mux.Handle("/app/", cfg.middlewareMetricsInc(fsh))
 
-	mux.HandleFunc("GET /api/healthz", healthHandler)
 	mux.HandleFunc("GET /admin/metrics", cfg.reqNumHandler)
-
 	mux.HandleFunc("POST /admin/reset", cfg.resetHandler)
+
+	mux.HandleFunc("GET /api/healthz", healthHandler)
 	mux.HandleFunc("POST /api/validate_chirp", validateHandler)
+	mux.HandleFunc("POST /api/users", usersHandler)
 
 	log.Fatal(server.ListenAndServe())
 
