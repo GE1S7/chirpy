@@ -1,39 +1,20 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
 )
 
-func validateHandler(w http.ResponseWriter, req *http.Request) {
-	type resp struct {
-		Resp string `json:"cleaned_body"`
-	}
+func validateChirp(w http.ResponseWriter, req *http.Request, body string) (string, error) {
 
-	type parameters struct {
-		Body string `json:"body"`
-	}
-
-	decoder := json.NewDecoder(req.Body)
-	params := parameters{}
-	err := decoder.Decode(&params)
-	if err != nil {
-
-		respondWithError(w, 500, "Error decoding request")
-
-	} else if len(params.Body) > 140 {
+	if len(body) > 140 {
 		respondWithError(w, 400, "Chirp is too long")
-	} else {
-
-		respValid := resp{
-			Resp: cleanOrgBody(params.Body),
-		}
-
-		respondWithJson(w, 200, respValid)
-
+		return "", fmt.Errorf("Chirp is too long")
 	}
+
+	return cleanOrgBody(body), nil
 
 }
 

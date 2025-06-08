@@ -45,8 +45,8 @@ func main() {
 	mux.HandleFunc("POST /admin/reset", cfg.resetHandler)
 
 	mux.HandleFunc("GET /api/healthz", healthHandler)
-	mux.HandleFunc("POST /api/validate_chirp", validateHandler)
-	mux.HandleFunc("POST /api/users", createUserHandler(&cfg))
+	mux.HandleFunc("POST /api/users", cfg.createUserHandler)
+	mux.HandleFunc("POST /api/chirp", cfg.chirpHandler)
 
 	log.Fatal(server.ListenAndServe())
 

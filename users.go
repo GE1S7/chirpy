@@ -15,36 +15,34 @@ type User struct {
 	Email     string    `json:"email"`
 }
 
-func createUserHandler(cfg *apiConfig) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) createUserHandler(w http.ResponseWriter, r *http.Request) {
 
-		type Params struct {
-			Email string `json:"email"`
-		}
+	type Params struct {
+		Email string `json:"email"`
+	}
 
-		var params Params
+	var params Params
 
-		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&params)
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&params)
+	if err != nil {
+
+		respondWithError(w, 400, "Error decoding request")
+
+	} else {
+
+		record, err := cfg.dbQueries.CreateUser(r.Context(), params.Email)
 		if err != nil {
-
-			respondWithError(w, 400, "Error decoding request")
-
-		} else {
-
-			record, err := cfg.dbQueries.CreateUser(r.Context(), params.Email)
-			if err != nil {
-				respondWithError(w, 400, "Error while fetching from database")
-			}
-
-			user := User{
-				ID:        record.ID,
-				CreatedAt: record.CreatedAt,
-				UpdatedAt: record.UpdatedAt,
-				Email:     record.Email,
-			}
-			respondWithJson(w, 201, user)
+			respondWithError(w, 400, "Error while fetching from database")
 		}
+
+		user := User{
+			ID:        record.ID,
+			CreatedAt: record.CreatedAt,
+			UpdatedAt: record.UpdatedAt,
+			Email:     record.Email,
+		}
+		respondWithJson(w, 201, user)
 	}
 
 }
