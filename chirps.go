@@ -18,9 +18,30 @@ type Chirp struct {
 	UserID    uuid.UUID `json:"user_id"`
 }
 
-func (cfg *apiConfig) getChirp(w http.ResponseWriter, r *http.Request) {
-	r.PathValue
-	cfg.dbQueries.
+func (cfg *apiConfig) getChirpHandler(w http.ResponseWriter, r *http.Request) {
+	chirpId := r.PathValue("chirpID")
+	idParsed, err := uuid.Parse(chirpId)
+
+	if chirpId == "" || err != nil {
+		respondWithError(w, 404, "error parsing path")
+	} else {
+		dbChirp, err := cfg.dbQueries.GetChirp(r.Context(), idParsed)
+		if err != nil {
+			respondWithError(w, 404, "error fetching resource")
+		}
+
+		chirp := Chirp{
+			ID:        dbChirp.ID,
+			CreatedAt: dbChirp.CreatedAt,
+			UpdatedAt: dbChirp.UpdatedAt,
+			Body:      dbChirp.Body,
+			UserID:    dbChirp.UserID,
+		}
+
+		respondWithJson(w, 200, chirp)
+
+	}
+}
 
 func (cfg *apiConfig) getAllChirpsHandler(w http.ResponseWriter, r *http.Request) {
 
