@@ -18,6 +18,10 @@ type Chirp struct {
 	UserID    uuid.UUID `json:"user_id"`
 }
 
+func (cfg *apiConfig) getChirp(w http.ResponseWriter, r *http.Request) {
+	r.PathValue
+	cfg.dbQueries.
+
 func (cfg *apiConfig) getAllChirpsHandler(w http.ResponseWriter, r *http.Request) {
 
 	dbChirps, err := cfg.dbQueries.GetChirpsCreatedAsc(r.Context())
@@ -36,7 +40,6 @@ func (cfg *apiConfig) getAllChirpsHandler(w http.ResponseWriter, r *http.Request
 			}
 
 			chirps = append(chirps, chirp)
-			//fmt.Println(chirps)
 
 		}
 		respondWithJson(w, 200, chirps)
