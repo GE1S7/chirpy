@@ -2,11 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
 func respondWithJson(w http.ResponseWriter, code int, payload interface{}) {
-	dat, _ := json.Marshal(payload)
+	dat, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)

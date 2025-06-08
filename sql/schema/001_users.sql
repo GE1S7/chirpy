@@ -9,13 +9,14 @@ CREATE TABLE users (
 CREATE TABLE chirps (
     id UUID PRIMARY KEY,
     created_at TIMESTAMP NOT NULL,
-    body STRING NOT NULL,
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE
+    updated_at TIMESTAMP NOT NULL,
+    body TEXT NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );
 
 
 
 -- +goose Down
-DROP TABLE users;
-DROP TABLE chirps;
+DROP TABLE IF EXISTS chirps;
+DROP TABLE IF EXISTS users;
 

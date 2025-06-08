@@ -13,8 +13,9 @@ import (
 type Chirp struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
+	UpdatedAt time.Time
 	Body      string
-	UserID    uuid.NullUUID
+	UserID    uuid.UUID
 }
 
 type User struct {

@@ -11,3 +11,8 @@ RETURNING *;
 
 -- name: DeleteChirps :exec
 DELETE FROM chirps;
+
+-- name: GetChirpsCreatedAsc :many
+SELECT *
+FROM chirps
+ORDER BY created_at ASC;
