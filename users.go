@@ -18,7 +18,8 @@ type User struct {
 func (cfg *apiConfig) createUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	type Params struct {
-		Email string `json:"email"`
+		Password string `json:"password"`
+		Email    string `json:"email"`
 	}
 
 	var params Params
