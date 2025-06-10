@@ -1,4 +1,4 @@
-module github.com/GE1S7/m/v2
+module github.com/GE1S7/chirpy
 
 go 1.23.0
 

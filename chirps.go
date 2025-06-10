@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/GE1S7/m/v2/internal/database"
+	"github.com/GE1S7/chirpy/internal/database"
 	"github.com/google/uuid"
 )
 
