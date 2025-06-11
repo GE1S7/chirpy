@@ -91,6 +91,7 @@ func (cfg *apiConfig) createChirpHandler(w http.ResponseWriter, r *http.Request)
 		userid, err = auth.ValidateJWT(token, cfg.jwtSecret)
 		if err != nil {
 			fmt.Println("Error:", err)
+			fmt.Println("token:", token)
 			respondWithError(w, 401, "Unauthorized")
 		} else {
 

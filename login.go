@@ -63,6 +63,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 				}
 
 				token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, expiresIn)
+				fmt.Println("created token:", token)
 				if err != nil {
 					respondWithError(w, 401, "")
 				}
