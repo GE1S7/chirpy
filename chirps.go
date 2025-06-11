@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/GE1S7/chirpy/internal/auth"
 	"github.com/GE1S7/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -79,6 +80,15 @@ func (cfg *apiConfig) createChirpHandler(w http.ResponseWriter, r *http.Request)
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&parameters); err != nil {
 		respondWithError(w, 400, "Error processing a request")
+	}
+
+	// validate jwt
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 400, "Error processing a request")
+	}
+	if _, err := auth.ValidateJWT(token, cfg.jwtSecret); err != nil {
+		respondWithError(w, 401, "Unauthorized")
 	}
 
 	cleanBody, err := validateChirp(w, r, parameters.Body)
