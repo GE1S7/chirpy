@@ -22,6 +22,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
 		Email     string    `json:"email"`
+		Token     string    `json:"token"`
 	}
 
 	var params Params
@@ -45,14 +46,33 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 
 				respondWithError(w, 401, "")
-				fmt.Println(user)
-				fmt.Println(params.Password)
 			} else {
+				var expiresIn time.Duration
+
+				if params.ExpiresInSeconds != 0 {
+					expiresIn, err = time.ParseDuration(fmt.Sprintf("%ds", params.ExpiresInSeconds))
+					if err != nil {
+						respondWithError(w, 401, "")
+					}
+
+				} else {
+					expiresIn, err = time.ParseDuration("1h")
+					if err != nil {
+						respondWithError(w, 401, "")
+					}
+				}
+
+				token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, expiresIn)
+				if err != nil {
+					respondWithError(w, 401, "")
+				}
+
 				userOut := UserOut{
 					ID:        user.ID,
 					CreatedAt: user.CreatedAt,
 					UpdatedAt: user.UpdatedAt,
 					Email:     user.Email,
+					Token:     token,
 				}
 				respondWithJson(w, 200, userOut)
 			}
