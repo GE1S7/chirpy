@@ -6,7 +6,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func testHashing(t *testing.T) {
+func TestHashing(t *testing.T) {
 	passwords := []string{"AsDfAsD", "%9Je136", "pdfjnme$4", "@kli59"}
 
 	for _, e := range passwords {
@@ -37,7 +37,7 @@ func TestInvalidPairs(t *testing.T) {
 	}
 }
 
-func TestCreatedFuncs(t *testing.T) {
+func TestHashingFuncs(t *testing.T) {
 	var passHash = make(map[string]string)
 	passwords := []string{"test", "asdfasd", "%6je134", "aPldfjnme$3", "!?@klQiQ56.-"}
 
@@ -57,14 +57,3 @@ func TestCreatedFuncs(t *testing.T) {
 
 	}
 }
-
-//func TestHashPassword(t *testing.T) {
-//	passHashBcrypt := make(map[[]byte][]byte)
-//	passwords := []string{"test", "asdfasd", "%6je134", "aPldfjnme$3", "!?@klQiQ56.-"}
-//	for _, e := range passwords {
-//		hashed, err := bcrypt.GenerateFromPassword(byte(e))
-//		if err != nil {
-//			t.Errorf("Bcrypt hashing error: %v", err)
-//		}
-//	}
-//}
