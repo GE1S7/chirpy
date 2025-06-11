@@ -32,3 +32,22 @@ func TestNoBearerToken(t *testing.T) {
 		t.Errorf("header without token string accepted")
 	}
 }
+
+func TestTokenSame(t *testing.T) {
+	expected := "token123"
+	req, err := http.NewRequest("GET", "https://api.example.com/data", nil)
+	if err != nil {
+		t.Errorf("error creating request: %v", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer token123")
+
+	actual, err := GetBearerToken(req.Header)
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+
+	if expected != actual {
+		t.Errorf("expected token (%v) does not match retrieved (%v)", expected, actual)
+	}
+}

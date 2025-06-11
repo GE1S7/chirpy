@@ -83,39 +83,44 @@ func (cfg *apiConfig) createChirpHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// validate jwt
+	var userid uuid.UUID
 	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		respondWithError(w, 400, "Error processing a request")
-	}
-	if _, err := auth.ValidateJWT(token, cfg.jwtSecret); err != nil {
-		respondWithError(w, 401, "Unauthorized")
-	}
-
-	cleanBody, err := validateChirp(w, r, parameters.Body)
-
-	if err != nil {
-		respondWithError(w, 400, "Error validating chirp")
-		fmt.Println("Error validating chirp:", err)
 	} else {
-		chirpParams := database.CreateChirpParams{
-			Body:   cleanBody,
-			UserID: parameters.UserID,
-		}
-
-		createdChirp, err := cfg.dbQueries.CreateChirp(r.Context(), chirpParams)
+		userid, err = auth.ValidateJWT(token, cfg.jwtSecret)
 		if err != nil {
-			fmt.Println("Error creating chirp", err)
-			respondWithError(w, 500, "Error creating chirp")
+			fmt.Println("Error:", err)
+			respondWithError(w, 401, "Unauthorized")
 		} else {
-			chirp := Chirp{
-				ID:        createdChirp.ID,
-				CreatedAt: createdChirp.CreatedAt,
-				UpdatedAt: createdChirp.UpdatedAt,
-				Body:      createdChirp.Body,
-				UserID:    createdChirp.UserID,
-			}
 
-			respondWithJson(w, 201, chirp)
+			cleanBody, err := validateChirp(w, r, parameters.Body)
+
+			if err != nil {
+				respondWithError(w, 400, "Error validating chirp")
+				fmt.Println("Error validating chirp:", err)
+			} else {
+				chirpParams := database.CreateChirpParams{
+					Body:   cleanBody,
+					UserID: userid,
+				}
+
+				createdChirp, err := cfg.dbQueries.CreateChirp(r.Context(), chirpParams)
+				if err != nil {
+					fmt.Println("Error creating chirp", err)
+					respondWithError(w, 500, "Error creating chirp")
+				} else {
+					chirp := Chirp{
+						ID:        createdChirp.ID,
+						CreatedAt: createdChirp.CreatedAt,
+						UpdatedAt: createdChirp.UpdatedAt,
+						Body:      createdChirp.Body,
+						UserID:    createdChirp.UserID,
+					}
+
+					respondWithJson(w, 201, chirp)
+				}
+			}
 		}
 	}
 }

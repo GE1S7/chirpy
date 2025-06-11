@@ -14,7 +14,7 @@ func GetBearerToken(headers http.Header) (string, error) {
 
 	for _, e := range authHeader {
 		if strings.Contains(e, "Bearer ") {
-			tokenString := strings.TrimRight(e, "Bearer ")
+			tokenString := strings.TrimLeft(e, "Bearer ")
 			return tokenString, nil
 		}
 	}
