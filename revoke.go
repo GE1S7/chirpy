@@ -6,7 +6,7 @@ import (
 	"github.com/GE1S7/chirpy/internal/auth"
 )
 
-func (cfg *apiConfig) revokeHanlder(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) revokeHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		respondWithError(w, 401, "No token in request header found")

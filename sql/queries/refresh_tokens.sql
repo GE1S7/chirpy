@@ -10,8 +10,8 @@ VALUES (
 )
 RETURNING *;
 
--- name: GetTokenExpiration :one
-SELECT expires_at, user_id
+-- name: GetTokenData :one
+SELECT expires_at, user_id, revoked_at
 FROM refresh_tokens
 WHERE token = $1;
 

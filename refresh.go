@@ -15,16 +15,22 @@ func (cfg *apiConfig) refreshHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenData, err := cfg.dbQueries.GetTokenExpiration(r.Context(), refreshToken)
+	tokenData, err := cfg.dbQueries.GetTokenData(r.Context(), refreshToken)
+
+	if tokenData.RevokedAt.Valid == true {
+		respondWithError(w, 401, fmt.Sprintf("%v", err))
+		return
+	}
+
 	expiresAt := tokenData.ExpiresAt
 	if err != nil {
-		fmt.Println(err)
-		respondWithError(w, 401, "")
+		respondWithError(w, 401, fmt.Sprintf("%v", err))
 		return
 	}
 
 	if expiresAt.Before(time.Now()) {
 		respondWithError(w, 401, "Expired refresh token")
+		fmt.Println("Expired!")
 		return
 	}
 

@@ -41,20 +41,20 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 
-			respondWithError(w, 401, "")
+			respondWithError(w, 401, fmt.Sprintf("%v", err))
 			return
 
 		} else {
 			err := auth.CheckPasswordHash(user.HashedPassword.String, params.Password)
 			if err != nil {
 
-				respondWithError(w, 401, "")
+				respondWithError(w, 401, fmt.Sprintf("%v", err))
 			} else {
 				var expiresIn time.Duration
 
 				expiresIn, err = time.ParseDuration("1h")
 				if err != nil {
-					respondWithError(w, 401, "")
+					respondWithError(w, 401, fmt.Sprintf("%v", err))
 					return
 				}
 
@@ -62,20 +62,20 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 				token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, expiresIn)
 				fmt.Println("created token:", token)
 				if err != nil {
-					respondWithError(w, 401, "")
+					respondWithError(w, 401, fmt.Sprintf("%v", err))
 					return
 				}
 
 				// create refresh token
 				refreshToken, err := auth.MakeRefreshToken()
 				if err != nil {
-					respondWithError(w, 401, "")
+					respondWithError(w, 401, fmt.Sprintf("%v", err))
 					return
 				}
 
-				expiresInRefresh, err := time.ParseDuration("60d")
+				expiresInRefresh, err := time.ParseDuration(fmt.Sprintf("%vh", 60*24))
 				if err != nil {
-					respondWithError(w, 401, "")
+					respondWithError(w, 401, fmt.Sprintf("%v", err))
 					return
 				}
 
