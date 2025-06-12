@@ -7,22 +7,23 @@ import (
 	"time"
 
 	"github.com/GE1S7/chirpy/internal/auth"
+	"github.com/GE1S7/chirpy/internal/database"
 	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 	type Params struct {
-		Password         string `json:"password"`
-		Email            string `json:"email"`
-		ExpiresInSeconds int    `json:"expires_in_seconds,omitempty"`
+		Password string `json:"password"`
+		Email    string `json:"email"`
 	}
 
 	type UserOut struct {
-		ID        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Email     string    `json:"email"`
-		Token     string    `json:"token"`
+		ID           uuid.UUID `json:"id"`
+		CreatedAt    time.Time `json:"created_at"`
+		UpdatedAt    time.Time `json:"updated_at"`
+		Email        string    `json:"email"`
+		Token        string    `json:"token"`
+		RefreshToken string    `json:"refresh_token"`
 	}
 
 	var params Params
@@ -32,6 +33,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 
 		respondWithError(w, 400, "")
+		return
 
 	} else {
 
@@ -40,6 +42,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 
 			respondWithError(w, 401, "")
+			return
 
 		} else {
 			err := auth.CheckPasswordHash(user.HashedPassword.String, params.Password)
@@ -49,31 +52,48 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				var expiresIn time.Duration
 
-				if params.ExpiresInSeconds != 0 {
-					expiresIn, err = time.ParseDuration(fmt.Sprintf("%ds", params.ExpiresInSeconds))
-					if err != nil {
-						respondWithError(w, 401, "")
-					}
-
-				} else {
-					expiresIn, err = time.ParseDuration("1h")
-					if err != nil {
-						respondWithError(w, 401, "")
-					}
+				expiresIn, err = time.ParseDuration("1h")
+				if err != nil {
+					respondWithError(w, 401, "")
+					return
 				}
 
+				// create access token
 				token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, expiresIn)
 				fmt.Println("created token:", token)
 				if err != nil {
 					respondWithError(w, 401, "")
+					return
 				}
 
+				// create refresh token
+				refreshToken, err := auth.MakeRefreshToken()
+				if err != nil {
+					respondWithError(w, 401, "")
+					return
+				}
+
+				expiresInRefresh, err := time.ParseDuration("60d")
+				if err != nil {
+					respondWithError(w, 401, "")
+					return
+				}
+
+				refreshTokenParams := database.CreateRefreshTokenParams{
+					Token:     refreshToken,
+					UserID:    user.ID,
+					ExpiresAt: time.Now().UTC().Add(expiresInRefresh),
+				}
+
+				cfg.dbQueries.CreateRefreshToken(r.Context(), refreshTokenParams)
+
 				userOut := UserOut{
-					ID:        user.ID,
-					CreatedAt: user.CreatedAt,
-					UpdatedAt: user.UpdatedAt,
-					Email:     user.Email,
-					Token:     token,
+					ID:           user.ID,
+					CreatedAt:    user.CreatedAt,
+					UpdatedAt:    user.UpdatedAt,
+					Email:        user.Email,
+					Token:        token,
+					RefreshToken: refreshToken,
 				}
 				respondWithJson(w, 200, userOut)
 			}
