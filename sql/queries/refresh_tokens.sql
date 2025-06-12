@@ -9,3 +9,8 @@ VALUES (
     NULL
 )
 RETURNING *;
+
+-- name: GetTokenExpiration :one
+SELECT expires_at, user_id
+FROM refresh_tokens
+WHERE token = $1;
