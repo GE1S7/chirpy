@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"strings"
@@ -21,5 +23,12 @@ func GetBearerToken(headers http.Header) (string, error) {
 	}
 
 	return "", fmt.Errorf("http Header does not contain authentication token")
+
+}
+
+func MakeRefreshToken() (string, error) {
+	key := make([]byte, 32)
+	rand.Read(key)
+	return hex.EncodeToString(key), nil
 
 }
