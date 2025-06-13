@@ -65,7 +65,7 @@ func (cfg *apiConfig) createUserHandler(w http.ResponseWriter, r *http.Request) 
 
 }
 
-func (cfg *apiConfig) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) updateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	type Params struct {
 		Password string `json:"password"`
@@ -117,5 +117,14 @@ func (cfg *apiConfig) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 		respondWithError(w, 401, "Error fetchin new user resource")
 		return
 	}
+
+	userOut := UserOut{
+		ID:        newUserRow.ID,
+		CreatedAt: newUserRow.CreatedAt,
+		UpdatedAt: newUserRow.UpdatedAt,
+		Email:     newUserRow.Email,
+	}
+
+	respondWithJson(w, 200, userOut)
 
 }
