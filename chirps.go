@@ -125,3 +125,43 @@ func (cfg *apiConfig) createChirpHandler(w http.ResponseWriter, r *http.Request)
 		}
 	}
 }
+
+func (cfg *apiConfig) deleteChirpHandler(w http.ResponseWriter, r *http.Request) {
+	chirpID, err := uuid.Parse(r.PathValue("chirpID"))
+	if err != nil {
+		respondWithError(w, 401, "Error parsing path")
+		return
+	}
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 401, "Error extracting token from header")
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.jwtSecret)
+	if err != nil {
+		respondWithError(w, 401, "Error validating token")
+		return
+	}
+
+	chirpData, err := cfg.dbQueries.GetChirp(r.Context(), chirpID)
+	if err != nil {
+		respondWithError(w, 404, "Error fetching chirp from the database")
+		return
+	}
+
+	if chirpData.UserID != userID {
+		respondWithError(w, 403, "UserID in request does not match chirp.UserID")
+		return
+	}
+
+	err = cfg.dbQueries.DeleteChirp(r.Context(), chirpID)
+	if err != nil {
+		respondWithError(w, 401, "Error deleting chirp")
+		return
+	}
+
+	respondWithJson(w, 204, "")
+
+}
