@@ -24,6 +24,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 		Email        string    `json:"email"`
 		Token        string    `json:"token"`
 		RefreshToken string    `json:"refresh_token"`
+		IsChirpyRed  bool      `json:"is_chirpy_red"`
 	}
 
 	var params Params
@@ -94,6 +95,7 @@ func (cfg *apiConfig) loginHandler(w http.ResponseWriter, r *http.Request) {
 					Email:        user.Email,
 					Token:        token,
 					RefreshToken: refreshToken,
+					IsChirpyRed:  user.IsChirpyRed.Bool,
 				}
 				respondWithJson(w, 200, userOut)
 			}
