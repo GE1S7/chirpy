@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/GE1S7/chirpy/internal/auth"
@@ -44,28 +45,44 @@ func (cfg *apiConfig) getChirpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (cfg *apiConfig) getAllChirpsHandler(w http.ResponseWriter, r *http.Request) {
-
-	dbChirps, err := cfg.dbQueries.GetChirpsCreatedAsc(r.Context())
+func (cfg *apiConfig) getChirpsHandler(w http.ResponseWriter, r *http.Request) {
+	var dbChirps []database.Chirp
+	var err error
+	userID, err := uuid.Parse(r.URL.Query().Get("author_id"))
 	if err != nil {
-		respondWithError(w, 500, "Error fetching resource")
-	} else {
-		var chirps []Chirp
-		for _, e := range dbChirps {
-
-			chirp := Chirp{
-				ID:        e.ID,
-				CreatedAt: e.CreatedAt,
-				UpdatedAt: e.UpdatedAt,
-				Body:      e.Body,
-				UserID:    e.UserID,
-			}
-
-			chirps = append(chirps, chirp)
-
+		dbChirps, err = cfg.dbQueries.GetChirpsCreatedAsc(r.Context())
+		if err != nil {
+			respondWithError(w, 500, "Error fetching resource")
+			return
 		}
-		respondWithJson(w, 200, chirps)
+	} else {
+		dbChirps, err = cfg.dbQueries.GetChirpsByAuthor(r.Context(), userID)
+		if err != nil {
+			respondWithError(w, 500, "Error fetching resource")
+			return
+		}
 	}
+
+	var chirps []Chirp
+	for _, e := range dbChirps {
+
+		chirp := Chirp{
+			ID:        e.ID,
+			CreatedAt: e.CreatedAt,
+			UpdatedAt: e.UpdatedAt,
+			Body:      e.Body,
+			UserID:    e.UserID,
+		}
+
+		chirps = append(chirps, chirp)
+
+	}
+
+	if r.URL.Query().Get("sort") == "desc" {
+		slices.Reverse(chirps)
+	}
+
+	respondWithJson(w, 200, chirps)
 
 }
 
